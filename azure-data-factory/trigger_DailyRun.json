@@ -1,0 +1,26 @@
+{
+  "name": "DailyRun",
+  "properties": {
+    "annotations": [],
+    "runtimeState": "Stopped",
+    "pipelines": [
+      {
+        "pipelineReference": {
+          "referenceName": "BronzeNew_To_BronzeArchive",
+          "type": "PipelineReference"
+        },
+        "parameters": {}
+      }
+    ],
+    "type": "ScheduleTrigger",
+    "typeProperties": {
+      "recurrence": {
+        "frequency": "Day",
+        "interval": 1,
+        "startTime": "2026-10-09T00:23:00",
+        "timeZone": "W. Europe Standard Time",
+        "schedule": {}
+      }
+    }
+  }
+}

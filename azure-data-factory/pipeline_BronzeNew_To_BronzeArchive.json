@@ -1,0 +1,501 @@
+{
+  "name": "BronzeNew_To_BronzeArchive",
+  "properties": {
+    "activities": [
+      {
+        "name": "GetMetadata_BronzeNew",
+        "type": "GetMetadata",
+        "dependsOn": [
+          {
+            "activity": "Copy_Lake_Old_to_Bronze_New",
+            "dependencyConditions": [
+              "Succeeded"
+            ]
+          }
+        ],
+        "policy": {
+          "timeout": "0.00:10:00",
+          "retry": 1,
+          "retryIntervalInSeconds": 30,
+          "secureOutput": false,
+          "secureInput": false
+        },
+        "userProperties": [],
+        "typeProperties": {
+          "dataset": {
+            "referenceName": "LakeMedallionBronzeNew",
+            "type": "DatasetReference",
+            "parameters": {}
+          },
+          "fieldList": [
+            "childItems"
+          ],
+          "storeSettings": {
+            "type": "AzureBlobFSReadSettings",
+            "recursive": true,
+            "enablePartitionDiscovery": false
+          },
+          "formatSettings": {
+            "type": "DelimitedTextReadSettings"
+          }
+        }
+      },
+      {
+        "name": "ForEachEachFileInBrozeNew",
+        "type": "ForEach",
+        "dependsOn": [
+          {
+            "activity": "GetMetadata_BronzeNew",
+            "dependencyConditions": [
+              "Succeeded"
+            ]
+          }
+        ],
+        "userProperties": [],
+        "typeProperties": {
+          "items": {
+            "value": "@activity('GetMetadata_BronzeNew').output.childItems",
+            "type": "Expression"
+          },
+          "activities": [
+            {
+              "name": "CopyBronzeNew_To_Archive",
+              "type": "Copy",
+              "dependsOn": [],
+              "policy": {
+                "timeout": "0.12:00:00",
+                "retry": 0,
+                "retryIntervalInSeconds": 30,
+                "secureOutput": false,
+                "secureInput": false
+              },
+              "userProperties": [],
+              "typeProperties": {
+                "source": {
+                  "type": "DelimitedTextSource",
+                  "storeSettings": {
+                    "type": "AzureBlobFSReadSettings",
+                    "recursive": true,
+                    "wildcardFileName": {
+                      "value": "@item().name",
+                      "type": "Expression"
+                    },
+                    "enablePartitionDiscovery": false
+                  },
+                  "formatSettings": {
+                    "type": "DelimitedTextReadSettings"
+                  }
+                },
+                "sink": {
+                  "type": "DelimitedTextSink",
+                  "storeSettings": {
+                    "type": "AzureBlobFSWriteSettings"
+                  },
+                  "formatSettings": {
+                    "type": "DelimitedTextWriteSettings",
+                    "quoteAllText": true,
+                    "fileExtension": ".txt"
+                  }
+                },
+                "enableStaging": false,
+                "translator": {
+                  "type": "TabularTranslator",
+                  "typeConversion": true,
+                  "typeConversionSettings": {
+                    "allowDataTruncation": true,
+                    "treatBooleanAsNumber": false
+                  }
+                }
+              },
+              "inputs": [
+                {
+                  "referenceName": "LakeMedallionBronzeNew",
+                  "type": "DatasetReference",
+                  "parameters": {}
+                }
+              ],
+              "outputs": [
+                {
+                  "referenceName": "Bronze_Archive",
+                  "type": "DatasetReference",
+                  "parameters": {
+                    "folder_name": {
+                      "value": "@concat('bronze/archive/', \nsplit(item().name, '_')[0])",
+                      "type": "Expression"
+                    },
+                    "file_name": {
+                      "value": "@concat(\n    split(split(item().name, '_')[1], '.')[0],\n    '_',\n    utcNow('yyyy-MM-ddTHH''h''mm''m''ss''s'''),\n    '.csv')",
+                      "type": "Expression"
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      },
+      {
+        "name": "Copy_Bronze_New_to_Silver_processing",
+        "type": "Copy",
+        "dependsOn": [
+          {
+            "activity": "ForEachEachFileInBrozeNew",
+            "dependencyConditions": [
+              "Succeeded"
+            ]
+          }
+        ],
+        "policy": {
+          "timeout": "0.12:00:00",
+          "retry": 0,
+          "retryIntervalInSeconds": 30,
+          "secureOutput": false,
+          "secureInput": false
+        },
+        "userProperties": [],
+        "typeProperties": {
+          "source": {
+            "type": "DelimitedTextSource",
+            "storeSettings": {
+              "type": "AzureBlobFSReadSettings",
+              "recursive": true,
+              "wildcardFileName": "*csv",
+              "enablePartitionDiscovery": false
+            },
+            "formatSettings": {
+              "type": "DelimitedTextReadSettings"
+            }
+          },
+          "sink": {
+            "type": "DelimitedTextSink",
+            "storeSettings": {
+              "type": "AzureBlobFSWriteSettings"
+            },
+            "formatSettings": {
+              "type": "DelimitedTextWriteSettings",
+              "quoteAllText": true,
+              "fileExtension": ".csv"
+            }
+          },
+          "enableStaging": false,
+          "translator": {
+            "type": "TabularTranslator",
+            "typeConversion": true,
+            "typeConversionSettings": {
+              "allowDataTruncation": true,
+              "treatBooleanAsNumber": false
+            }
+          }
+        },
+        "inputs": [
+          {
+            "referenceName": "LakeMedallionBronzeNew",
+            "type": "DatasetReference",
+            "parameters": {}
+          }
+        ],
+        "outputs": [
+          {
+            "referenceName": "Lake_Medallion_silver_processing",
+            "type": "DatasetReference",
+            "parameters": {}
+          }
+        ]
+      },
+      {
+        "name": "Notebook_Silver_to_goldProcessing",
+        "type": "SynapseNotebook",
+        "dependsOn": [
+          {
+            "activity": "Copy_Bronze_New_to_Silver_processing",
+            "dependencyConditions": [
+              "Succeeded"
+            ]
+          }
+        ],
+        "policy": {
+          "timeout": "0.12:00:00",
+          "retry": 0,
+          "retryIntervalInSeconds": 30,
+          "secureOutput": false,
+          "secureInput": false
+        },
+        "userProperties": [],
+        "typeProperties": {
+          "notebook": {
+            "referenceName": {
+              "value": "04_silver_processing_to_silver_and_to_gold_processing",
+              "type": "Expression"
+            },
+            "type": "NotebookReference"
+          },
+          "snapshot": true,
+          "sparkPool": {
+            "referenceName": {
+              "value": "PoolDemo1",
+              "type": "Expression"
+            },
+            "type": "BigDataPoolReference"
+          },
+          "executorSize": "Small",
+          "conf": {
+            "spark.dynamicAllocation.enabled": true
+          },
+          "driverSize": "Small"
+        },
+        "linkedServiceName": {
+          "referenceName": "BeehavenAzureSynapse",
+          "type": "LinkedServiceReference"
+        }
+      },
+      {
+        "name": "Copy_Lake_Old_to_Bronze_New",
+        "type": "Copy",
+        "dependsOn": [],
+        "policy": {
+          "timeout": "0.12:00:00",
+          "retry": 0,
+          "retryIntervalInSeconds": 30,
+          "secureOutput": false,
+          "secureInput": false
+        },
+        "userProperties": [],
+        "typeProperties": {
+          "source": {
+            "type": "DelimitedTextSource",
+            "storeSettings": {
+              "type": "AzureBlobStorageReadSettings",
+              "recursive": true,
+              "wildcardFileName": "*csv",
+              "enablePartitionDiscovery": false
+            },
+            "formatSettings": {
+              "type": "DelimitedTextReadSettings"
+            }
+          },
+          "sink": {
+            "type": "DelimitedTextSink",
+            "storeSettings": {
+              "type": "AzureBlobFSWriteSettings"
+            },
+            "formatSettings": {
+              "type": "DelimitedTextWriteSettings",
+              "quoteAllText": true,
+              "fileExtension": ".csv"
+            }
+          },
+          "enableStaging": false,
+          "translator": {
+            "type": "TabularTranslator",
+            "typeConversion": true,
+            "typeConversionSettings": {
+              "allowDataTruncation": true,
+              "treatBooleanAsNumber": false
+            }
+          }
+        },
+        "inputs": [
+          {
+            "referenceName": "Old_lake_files",
+            "type": "DatasetReference",
+            "parameters": {}
+          }
+        ],
+        "outputs": [
+          {
+            "referenceName": "LakeMedallionBronzeNew",
+            "type": "DatasetReference",
+            "parameters": {}
+          }
+        ]
+      },
+      {
+        "name": "Delete_Lake_Old",
+        "type": "Delete",
+        "dependsOn": [
+          {
+            "activity": "Copy_Lake_Old_to_Bronze_New",
+            "dependencyConditions": [
+              "Succeeded"
+            ]
+          }
+        ],
+        "policy": {
+          "timeout": "0.12:00:00",
+          "retry": 0,
+          "retryIntervalInSeconds": 30,
+          "secureOutput": false,
+          "secureInput": false
+        },
+        "userProperties": [],
+        "typeProperties": {
+          "dataset": {
+            "referenceName": "Old_lake_files",
+            "type": "DatasetReference",
+            "parameters": {}
+          },
+          "enableLogging": false,
+          "storeSettings": {
+            "type": "AzureBlobStorageReadSettings",
+            "recursive": true,
+            "wildcardFileName": "*.csv",
+            "enablePartitionDiscovery": false
+          }
+        }
+      },
+      {
+        "name": "Delete_Bronze_New",
+        "type": "Delete",
+        "dependsOn": [
+          {
+            "activity": "Copy_Bronze_New_to_Silver_processing",
+            "dependencyConditions": [
+              "Succeeded"
+            ]
+          }
+        ],
+        "policy": {
+          "timeout": "0.12:00:00",
+          "retry": 0,
+          "retryIntervalInSeconds": 30,
+          "secureOutput": false,
+          "secureInput": false
+        },
+        "userProperties": [],
+        "typeProperties": {
+          "dataset": {
+            "referenceName": "LakeMedallionBronzeNew",
+            "type": "DatasetReference",
+            "parameters": {}
+          },
+          "enableLogging": false,
+          "storeSettings": {
+            "type": "AzureBlobFSReadSettings",
+            "recursive": true,
+            "wildcardFileName": "*.csv",
+            "enablePartitionDiscovery": false
+          }
+        }
+      },
+      {
+        "name": "Delete_SilverProcessing",
+        "type": "Delete",
+        "dependsOn": [
+          {
+            "activity": "Notebook_Silver_to_goldProcessing",
+            "dependencyConditions": [
+              "Succeeded"
+            ]
+          }
+        ],
+        "policy": {
+          "timeout": "0.12:00:00",
+          "retry": 0,
+          "retryIntervalInSeconds": 30,
+          "secureOutput": false,
+          "secureInput": false
+        },
+        "userProperties": [],
+        "typeProperties": {
+          "dataset": {
+            "referenceName": "Lake_Medallion_silver_processing",
+            "type": "DatasetReference",
+            "parameters": {}
+          },
+          "enableLogging": false,
+          "storeSettings": {
+            "type": "AzureBlobFSReadSettings",
+            "recursive": true,
+            "wildcardFileName": "*.csv",
+            "enablePartitionDiscovery": false
+          }
+        }
+      },
+      {
+        "name": "Notebook_Gold_1DF",
+        "type": "SynapseNotebook",
+        "dependsOn": [
+          {
+            "activity": "Delete_SilverProcessing",
+            "dependencyConditions": [
+              "Succeeded"
+            ]
+          }
+        ],
+        "policy": {
+          "timeout": "0.12:00:00",
+          "retry": 0,
+          "retryIntervalInSeconds": 30,
+          "secureOutput": false,
+          "secureInput": false
+        },
+        "userProperties": [],
+        "typeProperties": {
+          "notebook": {
+            "referenceName": {
+              "value": "05_gold_processing_to_gold",
+              "type": "Expression"
+            },
+            "type": "NotebookReference"
+          },
+          "snapshot": true,
+          "sparkPool": {
+            "referenceName": {
+              "value": "PoolDemo1",
+              "type": "Expression"
+            },
+            "type": "BigDataPoolReference"
+          },
+          "executorSize": "Small",
+          "conf": {
+            "spark.dynamicAllocation.enabled": true
+          },
+          "driverSize": "Small"
+        },
+        "linkedServiceName": {
+          "referenceName": "BeehavenAzureSynapse",
+          "type": "LinkedServiceReference"
+        }
+      },
+      {
+        "name": "Delete_GoldPrcessing",
+        "type": "Delete",
+        "dependsOn": [
+          {
+            "activity": "Notebook_Gold_1DF",
+            "dependencyConditions": [
+              "Succeeded"
+            ]
+          }
+        ],
+        "policy": {
+          "timeout": "0.12:00:00",
+          "retry": 0,
+          "retryIntervalInSeconds": 30,
+          "secureOutput": false,
+          "secureInput": false
+        },
+        "userProperties": [],
+        "typeProperties": {
+          "dataset": {
+            "referenceName": "Gold_Processing",
+            "type": "DatasetReference",
+            "parameters": {}
+          },
+          "enableLogging": false,
+          "storeSettings": {
+            "type": "AzureBlobFSReadSettings",
+            "recursive": true,
+            "wildcardFileName": "*.parquet",
+            "enablePartitionDiscovery": false
+          }
+        }
+      }
+    ],
+    "policy": {
+      "elapsedTimeMetric": {}
+    },
+    "annotations": [],
+    "lastPublishTime": "2026-10-09T00:25:48Z"
+  }
+}

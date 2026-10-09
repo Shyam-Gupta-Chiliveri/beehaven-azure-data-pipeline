@@ -1,0 +1,147 @@
+{
+    "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "factoryName": {
+            "type": "string",
+            "metadata": "Data Factory name",
+            "defaultValue": "adf-beehaven-dev"
+        },
+        "ls_blob_source_connectionString": {
+            "type": "secureString",
+            "metadata": "Secure string for 'connectionString' of 'ls_blob_source'"
+        },
+        "ls_adls_beehaven_accountKey": {
+            "type": "secureString",
+            "metadata": "Secure string for 'accountKey' of 'ls_adls_beehaven'"
+        },
+        "Old_lake_connectionString": {
+            "type": "secureString",
+            "metadata": "Secure string for 'connectionString' of 'Old_lake'"
+        },
+        "LakeMedalllion_Brinze_accountKey": {
+            "type": "secureString",
+            "metadata": "Secure string for 'accountKey' of 'LakeMedalllion_Brinze'"
+        },
+        "ds_old_blob_connectionString": {
+            "type": "secureString",
+            "metadata": "Secure string for 'connectionString' of 'ds_old_blob'"
+        },
+        "ds_Old_lake_connectionString": {
+            "type": "secureString",
+            "metadata": "Secure string for 'connectionString' of 'ds_Old_lake'"
+        },
+        "Lake_Med_Bronze_New_accountKey": {
+            "type": "secureString",
+            "metadata": "Secure string for 'accountKey' of 'Lake_Med_Bronze_New'"
+        },
+        "AzureDataLakeStorage1_accountKey": {
+            "type": "secureString",
+            "metadata": "Secure string for 'accountKey' of 'AzureDataLakeStorage1'"
+        },
+        "LakeMedallionBN_accountKey": {
+            "type": "secureString",
+            "metadata": "Secure string for 'accountKey' of 'LakeMedallionBN'"
+        },
+        "ls_adls_beehaven_properties_typeProperties_url": {
+            "type": "string",
+            "defaultValue": "https://stbeehavendev.dfs.core.windows.net/"
+        },
+        "LakeMedalllion_Brinze_properties_typeProperties_url": {
+            "type": "string",
+            "defaultValue": "https://stbeehavendev.dfs.core.windows.net/"
+        },
+        "Lake_Med_Bronze_New_properties_typeProperties_url": {
+            "type": "string",
+            "defaultValue": "https://lakemedallion.dfs.core.windows.net/"
+        },
+        "AzureDataLakeStorage1_properties_typeProperties_url": {
+            "type": "string",
+            "defaultValue": "https://lakemedallion.dfs.core.windows.net/"
+        },
+        "LakeMedallionBN_properties_typeProperties_url": {
+            "type": "string",
+            "defaultValue": "https://lakemedallion.dfs.core.windows.net/"
+        },
+        "BeehavenAzureSynapse_properties_typeProperties_endpoint": {
+            "type": "string",
+            "defaultValue": "https://beehaven-synapse-workspace.dev.azuresynapse.net"
+        },
+        "containerUri": {
+            "type": "string",
+            "metadata": "URI to storage account containing linked ARM templates"
+        },
+        "containerSasToken": {
+            "type": "string",
+            "metadata": "Sas token to storage account containing linked ARM templates"
+        }
+    },
+    "variables": {
+        "factoryId": "[concat('Microsoft.DataFactory/factories/', parameters('factoryName'))]"
+    },
+    "resources": [
+        {
+            "name": "adf-beehaven-dev_ArmTemplate_0",
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "2024-03-01",
+            "properties": {
+                "mode": "incremental",
+                "templateLink": {
+                    "uri": "[concat(parameters('containerUri'), '/ArmTemplate_0.json', parameters('containerSasToken'))]",
+                    "contentVersion": "1.0.0.0"
+                },
+                "parameters": {
+                    "factoryName": {
+                        "value": "[parameters('factoryName')]"
+                    },
+                    "ls_blob_source_connectionString": {
+                        "value": "[parameters('ls_blob_source_connectionString')]"
+                    },
+                    "ls_adls_beehaven_accountKey": {
+                        "value": "[parameters('ls_adls_beehaven_accountKey')]"
+                    },
+                    "Old_lake_connectionString": {
+                        "value": "[parameters('Old_lake_connectionString')]"
+                    },
+                    "LakeMedalllion_Brinze_accountKey": {
+                        "value": "[parameters('LakeMedalllion_Brinze_accountKey')]"
+                    },
+                    "ds_old_blob_connectionString": {
+                        "value": "[parameters('ds_old_blob_connectionString')]"
+                    },
+                    "ds_Old_lake_connectionString": {
+                        "value": "[parameters('ds_Old_lake_connectionString')]"
+                    },
+                    "Lake_Med_Bronze_New_accountKey": {
+                        "value": "[parameters('Lake_Med_Bronze_New_accountKey')]"
+                    },
+                    "AzureDataLakeStorage1_accountKey": {
+                        "value": "[parameters('AzureDataLakeStorage1_accountKey')]"
+                    },
+                    "LakeMedallionBN_accountKey": {
+                        "value": "[parameters('LakeMedallionBN_accountKey')]"
+                    },
+                    "ls_adls_beehaven_properties_typeProperties_url": {
+                        "value": "[parameters('ls_adls_beehaven_properties_typeProperties_url')]"
+                    },
+                    "LakeMedalllion_Brinze_properties_typeProperties_url": {
+                        "value": "[parameters('LakeMedalllion_Brinze_properties_typeProperties_url')]"
+                    },
+                    "Lake_Med_Bronze_New_properties_typeProperties_url": {
+                        "value": "[parameters('Lake_Med_Bronze_New_properties_typeProperties_url')]"
+                    },
+                    "AzureDataLakeStorage1_properties_typeProperties_url": {
+                        "value": "[parameters('AzureDataLakeStorage1_properties_typeProperties_url')]"
+                    },
+                    "LakeMedallionBN_properties_typeProperties_url": {
+                        "value": "[parameters('LakeMedallionBN_properties_typeProperties_url')]"
+                    },
+                    "BeehavenAzureSynapse_properties_typeProperties_endpoint": {
+                        "value": "[parameters('BeehavenAzureSynapse_properties_typeProperties_endpoint')]"
+                    }
+                }
+            },
+            "dependsOn": []
+        }
+    ]
+}

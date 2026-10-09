@@ -1,0 +1,8 @@
+pandas>=1.5
+numpy
+pyarrow
+fsspec
+adlfs        # only needed to read/write Azure Data Lake from outside Synapse
+requests
+matplotlib
+jupyter
