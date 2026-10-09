@@ -1,0 +1,17 @@
+   # data never goes to GitHub
+   bronze/
+   silver/
+   gold/
+   data/
+   *.csv
+   *.parquet
+
+   # secrets
+   .env
+   *.key
+
+   # Python / Jupyter / macOS clutter
+   __pycache__/
+   .ipynb_checkpoints/
+   .DS_Store
+   .venv/
