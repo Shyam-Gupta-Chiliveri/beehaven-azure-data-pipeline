@@ -127,27 +127,30 @@ most cells empty, so aggregating to hours gives every row its matching weather. 
 │   ├── trigger_DailyRun.json
 │   └── arm-template/                              # full ARM export of the factory (no secrets)
 ├── images/                                    # charts + images/azure/ screenshots
-├── requirements.txt
 └── README.md
 ```
 
-## How to run locally
+## How to reproduce it in Azure
 
-```bash
-pip install -r requirements.txt
-```
+This is a **cloud pipeline**, not a package you install: it runs on Azure services, and the raw data is not part of this repository.
+To rebuild it in your own Azure subscription:
 
-Use this folder layout. The raw data is not included in this repository.
+1. **Create the resources** (one resource group): a Storage account with **hierarchical namespace** (Data Lake Gen2) and a container with
+   the folders `bronze/new`, `bronze/archive`, `silver`, `gold`; an **Azure Synapse** workspace with a small **Apache Spark pool**;
+   and an **Azure Data Factory**.
+2. **Deploy the Data Factory**: *Data Factory → Manage → ARM template → Import ARM template*, and load
+   [`azure-data-factory/arm-template/ARMTemplateForFactory.json`](azure-data-factory/arm-template/). This recreates the pipelines, datasets and trigger.
+   Then point the linked services at your own storage account and Synapse workspace.
+3. **Import the notebooks** `04` and `05` into Synapse (*Develop → + → Import*). In each notebook's Settings cell, enter your storage account and
+   container. Read the account key from **Azure Key Vault**; never paste it into a notebook you share.
+4. **Grant permissions (RBAC)**: in *Synapse Studio → Manage → Access control*, give the Data Factory's managed identity a Synapse role
+   (e.g. *Synapse Administrator*), so it may run notebooks.
+5. **Set the notebook activities** to the Spark pool's node size (here: *Small*, 4 vCores / 28 GB).
+6. **Upload the sensor CSVs** to `bronze/new` (or the source container) and **trigger the pipeline**. The gold tables appear in `gold/`.
 
-```
-project/
-├── bronze/new/          # flow_schwartau.csv, humidity_schwartau.csv, temperature_schwartau.csv, weight_schwartau.csv
-└── notebooks/           # the notebooks from this repo
-```
-
-Run `01` → `02` (exploration), or `04` → `05` (pipeline version). The pipeline notebooks detect automatically whether they run
-locally or in Synapse. In Synapse, fill in the storage account and container in the Settings cell and read the key from
-**Azure Key Vault**. No credentials are stored in this repository.
+**Just want to read the work?** The notebooks render directly on GitHub, with all outputs and charts. Start with
+[`notebooks/01_bronze_to_silver_local.ipynb`](notebooks/01_bronze_to_silver_local.ipynb), which documents every cleaning decision.
+No credentials are stored in this repository.
 
 ## What I learned
 
